@@ -27,7 +27,14 @@ public class HyOS extends Application {
     private VBox loginScreen;
     private Label systemClock;
 
+    private boolean isRoot = false;
+    private String currentUser = "admin";
+    private String osName = "hyOS Apex v10.2";
     private String currentTheme = "dark";
+
+    private List<String> virtualDisk = new ArrayList<>(List.of(
+            "kernel.sys", "config.cfg", "media_cache.tmp", "readme.txt"
+    ));
 
     @Override
     public void start(Stage stage) {
@@ -43,6 +50,7 @@ public class HyOS extends Application {
         dock.setVisible(false);
 
         systemClock = new Label();
+        systemClock.setStyle("-fx-text-fill:#38bdf8;");
         startClockUpdate();
 
         refreshLauncher();
@@ -54,7 +62,7 @@ public class HyOS extends Application {
         root.getChildren().addAll(layout, loginScreen);
 
         stage.setScene(new Scene(root, 1200, 750));
-        stage.setTitle("hyOS Apex");
+        stage.setTitle(osName);
         stage.show();
     }
 
@@ -93,6 +101,48 @@ public class HyOS extends Application {
         );
     }
 
+    // ================= TERMINAL (RESTORED) =================
+    private Node createTerminal() {
+        TextArea ta = new TextArea(osName + " Shell\nType 'help'\n\n" + currentUser + "@hyos:~$ ");
+
+        ta.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                String prompt = isRoot ? "root@hyos:# " : currentUser + "@hyos:~$ ";
+                String[] lines = ta.getText().split("\n");
+                String input = lines[lines.length - 1].replace(prompt, "").trim().toLowerCase();
+                ta.appendText("\n");
+
+                if (input.equals("help")) {
+                    ta.appendText("help, sudo su, ls, clear, neofetch, open [app]");
+                } else if (input.equals("sudo su")) {
+                    isRoot = true;
+                    ta.appendText("ROOT ENABLED");
+                } else if (!isRoot) {
+                    ta.appendText("Access Denied");
+                } else {
+                    if (input.equals("ls")) ta.appendText(String.join(" ", virtualDisk));
+                    else if (input.equals("clear")) { ta.setText(prompt); return; }
+                    else if (input.equals("neofetch")) ta.appendText("hyOS Apex");
+                    else if (input.startsWith("open ")) handleShellLaunch(input.substring(5));
+                    else ta.appendText("unknown command");
+                }
+
+                ta.appendText("\n" + (isRoot ? "root@hyos:# " : currentUser + "@hyos:~$ "));
+                ta.positionCaret(ta.getText().length());
+                e.consume();
+            }
+        });
+
+        return ta;
+    }
+
+    private void handleShellLaunch(String app) {
+        if (app.contains("snake")) spawn("Snake", createSnake());
+        if (app.contains("paint")) spawn("Paint", createPaint());
+        if (app.contains("text")) spawn("Text", createText());
+        if (app.contains("stat")) spawn("Stat", createStat());
+    }
+
     // ================= THEME =================
     private void applyTheme(String t){
         currentTheme=t;
@@ -124,7 +174,6 @@ public class HyOS extends Application {
         s.add(new int[]{5,5});
 
         String[] dir={"RIGHT"}, next={"RIGHT"};
-        int[] food={10,10};
 
         c.setFocusTraversable(true);
         Platform.runLater(c::requestFocus);
@@ -148,6 +197,7 @@ public class HyOS extends Application {
 
                 int[] h=s.get(0);
                 int x=h[0],y=h[1];
+
                 if(dir[0].equals("UP"))y--;
                 if(dir[0].equals("DOWN"))y++;
                 if(dir[0].equals("LEFT"))x--;
@@ -199,7 +249,7 @@ public class HyOS extends Application {
                 (int)(c.getBlue()*255));
     }
 
-    // ================= HYTEXT (SAVE) =================
+    // ================= HYTEXT =================
     private Node createText(){
         VBox v=new VBox(5);
         TextArea ta=new TextArea();
@@ -211,7 +261,7 @@ public class HyOS extends Application {
             if(f!=null){
                 try(PrintWriter out=new PrintWriter(f)){
                     out.print(ta.getText());
-                }catch(Exception ex){ex.printStackTrace();}
+                }catch(Exception ignored){}
             }
         });
 
@@ -260,7 +310,6 @@ public class HyOS extends Application {
     }
 
     // ================= BASICS =================
-    private Node createTerminal(){ return new TextArea("Terminal"); }
     private Node createBrowser(){ return new WebView(); }
     private Node createMedia(){ return new WebView(); }
     private Node createFiles(){ return new ListView<>(); }
