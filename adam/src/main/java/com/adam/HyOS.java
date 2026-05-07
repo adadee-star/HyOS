@@ -532,6 +532,7 @@ public class HyOS extends Application {
         Button b2 = new Button("Install 📝 Notepad");
         b2.setOnAction(e -> {
             dock.getChildren().add(1, createLauncher("📝", "Notepad", () -> spawnWindow("Notepad", createNotepad())));
+            b2.setText("✔ Installed");
             b2.setDisable(true);
         });
         Button b3 = new Button("Install 📊 hyStat");
